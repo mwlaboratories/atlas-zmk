@@ -26,3 +26,14 @@ config ZMK_SPLIT
     default y
 
 endif
+
+# Disable USB logging for SAMD21 boards (seeeduino_xiao) as USB CDC ACM
+# is not properly configured for this board. USB logging is only available
+# for nRF52 boards (nice!nano).
+# Check for seeeduino_xiao board specifically
+if BOARD_SEEEDUINO_XIAO
+
+config ZMK_USB_LOGGING
+    default n
+
+endif
