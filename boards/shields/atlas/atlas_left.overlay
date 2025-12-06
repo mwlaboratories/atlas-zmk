@@ -23,6 +23,11 @@
  */
 
 
+// PS/2 Mouse / Trackpoint configuration is only available for nRF52 boards
+// (e.g., nice!nano). For SAMD21 boards (e.g., seeeduino_xiao), this section
+// is conditionally excluded.
+#ifdef CONFIG_SOC_FAMILY_NRF
+
 // Pick the PS/2 driver
 //
 // Comment out the following define to use the PS/2 GPIO driver instead of the
@@ -221,6 +226,10 @@
 // step `xxxx_right - nice_nano_v2 Devicetree file` into a file and run the
 // script on it.
 
+// These interrupt priority overrides are only for nRF52 boards (e.g., nice!nano)
+// They are not needed for SAMD21 boards (e.g., seeeduino_xiao)
+#ifdef CONFIG_SOC_FAMILY_NRF
+
 // gpiote should have the highest interrupt priority (0)
 &gpiote {
     interrupts = < 6 0 >;
@@ -400,6 +409,8 @@
     interrupts = < 42 3 >;
 };
 
+#endif // CONFIG_SOC_FAMILY_NRF
+
 
 /*
  * PS/2 Mouse / Trackpoint - Device Definitions
@@ -494,3 +505,5 @@
 	disable-clicking;
 	tp-sensitivity = <128>;
 };
+
+#endif // CONFIG_SOC_FAMILY_NRF
