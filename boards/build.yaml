@@ -1,0 +1,7 @@
+include:
+  # - board: seeeduino_xiao
+  #   shield: atlas_dongle
+  - board: seeeduino_xiao
+    shield: atlas_left
+  - board: seeeduino_xiao
+    shield: atlas_right
