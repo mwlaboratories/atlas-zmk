@@ -511,26 +511,3 @@
 		// zmk-config/config/includes/mouse_tp.dtsi
     };
 };
-
-// Enable PS/2 Mouse Devices
-&mouse_ps2 {
-    status = "okay";
-};
-
-&mouse_ps2_input_listener {
-    status = "okay";
-};
-
-#ifdef MOUSE_PS2_DRIVER_UART
-    &uart0 {
-        status = "okay";
-    };
-
-    &uart_ps2 {
-        status = "okay";
-    };
-#else
-    &gpio_ps2 {
-        status = "okay";
-    };
-#endif
