@@ -10,6 +10,18 @@
         ;
 };
 
+#include "totem.dtsi"
+
+&kscan0 {
+    col-gpios
+        = <&xiao_d 4 GPIO_ACTIVE_HIGH>
+        , <&xiao_d 5 GPIO_ACTIVE_HIGH>
+        , <&xiao_d 10 GPIO_ACTIVE_HIGH>
+        , <&xiao_d 9 GPIO_ACTIVE_HIGH>
+        , <&xiao_d 8 GPIO_ACTIVE_HIGH>
+        ;
+};
+
 /*
  * PS/2 Mouse / Trackpoint - User Configuration
  *
@@ -22,11 +34,6 @@
  *
  */
 
-
-// PS/2 Mouse / Trackpoint configuration is only available for nRF52 boards
-// (e.g., nice!nano). For SAMD21 boards (e.g., seeeduino_xiao), this section
-// is conditionally excluded.
-#ifdef CONFIG_SOC_FAMILY_NRF
 
 // Pick the PS/2 driver
 //
@@ -49,7 +56,7 @@
 #define MOUSE_PS2_DRIVER_UART
 
 
-// Configure the SCL and SDA pins using the`&xiao_d` notation.
+// Configure the SCL and SDA pins using the`&pro_micro` notation.
 //
 // If possible, try to choose the blue high frequency pins to avoid
 // bluetooth interference.
@@ -66,12 +73,11 @@
 //     need to be high frequency (only needed if you are not using a reset
 //     circuit)
 //
-// For the Atlas keyboard with XIAO BLE:
-//   - Pin 5 = TX, Pin 6 = RX
-//   - SCL uses pin 6 (RX), SDA uses pin 5 (TX)
-// Note: Adjust GPIO pin numbers based on XIAO BLE pinout mapping
-#define MOUSE_PS2_PIN_SCL_PRO_MICRO <&gpio0 5 GPIO_ACTIVE_HIGH>
-#define MOUSE_PS2_PIN_SDA_PRO_MICRO <&gpio0 4 GPIO_ACTIVE_HIGH>
+// But on the corne keyboard, these pins are used for the backlight. So, this
+// example config uses the pins D16 and D10 for clock and data and
+// D9 for the reset circuit.
+#define MOUSE_PS2_PIN_SCL_PRO_MICRO <&xiao_d 8 GPIO_ACTIVE_HIGH>
+#define MOUSE_PS2_PIN_SDA_PRO_MICRO <&xiao_d 9 GPIO_ACTIVE_HIGH>
 
 
 // Configure the Power-On-Reset pin
@@ -84,7 +90,7 @@
 // trackpoint reset circuit.
 //
 // It's ok to use a low-frequency pin for this.
-#define MOUSE_PS2_PIN_RST_PRO_MICRO <&gpio1 11 GPIO_ACTIVE_HIGH>
+#define MOUSE_PS2_PIN_RST_PRO_MICRO <&gpio0 9 GPIO_ACTIVE_HIGH>
 
 
 // Configure SDA pin using the pinctrl notation
@@ -106,8 +112,7 @@
 //
 // We don't define the SCL pin, because UART uses a baud rate instead of
 // a clock pin.
-// Note: This should match the GPIO pin for SDA (gpio0 4 = P0.04)
-#define MOUSE_PS2_PIN_SDA_PINCTRL <NRF_PSEL(UART_RX, 0, 4)>
+#define MOUSE_PS2_PIN_SDA_PINCTRL <NRF_PSEL(UART_RX, 0, 9)>
 
 // Configure UART BAUD Rate
 //
@@ -225,10 +230,6 @@
 // If you are building using the github actions, copy the output of the build
 // step `xxxx_right - nice_nano_v2 Devicetree file` into a file and run the
 // script on it.
-
-// These interrupt priority overrides are only for nRF52 boards (e.g., nice!nano)
-// They are not needed for SAMD21 boards (e.g., seeeduino_xiao)
-#ifdef CONFIG_SOC_FAMILY_NRF
 
 // gpiote should have the highest interrupt priority (0)
 &gpiote {
@@ -409,8 +410,6 @@
     interrupts = < 42 3 >;
 };
 
-#endif // CONFIG_SOC_FAMILY_NRF
-
 
 /*
  * PS/2 Mouse / Trackpoint - Device Definitions
@@ -462,48 +461,65 @@
 };
 
 
-&uart0 {
-    status = "disabled";
-    compatible = "nordic,nrf-uarte";
+#ifdef MOUSE_PS2_DRIVER_UART
 
-    current-speed = MOUSE_PS2_UART_BAUD_RATE;
-    pinctrl-0 = <&uart0_ps2_default>;
-    pinctrl-1 = <&uart0_ps2_off>;
+    &uart0 {
+        status = "disabled";
+        compatible = "nordic,nrf-uarte";
 
-    pinctrl-names = "default", "sleep";
+        current-speed = MOUSE_PS2_UART_BAUD_RATE;
+        pinctrl-0 = <&uart0_ps2_default>;
+        pinctrl-1 = <&uart0_ps2_off>;
 
-    uart_ps2: uart_ps2 {
-        status="disabled";
-        compatible = "uart-ps2";
-        scl-gpios = MOUSE_PS2_PIN_SCL_PRO_MICRO;
-        sda-gpios = MOUSE_PS2_PIN_SDA_PRO_MICRO;
+        pinctrl-names = "default", "sleep";
+
+        uart_ps2: uart_ps2 {
+            status="disabled";
+            compatible = "uart-ps2";
+            scl-gpios = MOUSE_PS2_PIN_SCL_PRO_MICRO;
+            sda-gpios = MOUSE_PS2_PIN_SDA_PRO_MICRO;
+        };
     };
-};
+
+#else
+
+    / {
+        gpio_ps2: gpio_ps2 {
+            status = "disabled";
+
+            compatible = "gpio-ps2";
+            scl-gpios = MOUSE_PS2_PIN_SCL_PRO_MICRO;
+            sda-gpios = MOUSE_PS2_PIN_SDA_PRO_MICRO;
+        };
+    };
+
+#endif
+
 
 / {
-    tpoint0: tpoint0 {
+    mouse_ps2: mouse_ps2 {
 		status = "disabled";
         compatible = "zmk,input-mouse-ps2";
+
+#ifdef MOUSE_PS2_DRIVER_UART
 	    ps2-device = <&uart_ps2>;
+#else
+	    ps2-device = <&gpio_ps2>;
+#endif
 
 #ifdef MOUSE_PS2_PIN_RST_PRO_MICRO
         rst-gpios = MOUSE_PS2_PIN_RST_PRO_MICRO;
 #endif
     };
-};
 
-&uart0 {
-    status = "okay";
-};
+    mouse_ps2_input_listener: mouse_ps2_input_listener {
+        compatible = "zmk,input-listener-ps2";
+        status = "disabled";
 
-&uart_ps2 {
-    status = "okay";
-};
+        device = <&mouse_ps2>;
 
-&tpoint0 {
-    status = "okay";
-	disable-clicking;
-	tp-sensitivity = <128>;
+		// Some of the available settings depend on the keymap. So they
+		// are adjusted in...
+		// zmk-config/config/includes/mouse_tp.dtsi
+    };
 };
-
-#endif // CONFIG_SOC_FAMILY_NRF
