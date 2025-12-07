@@ -21,6 +21,7 @@
 #define RIG 2
 #define TRI 3
 #define GAME 4
+#define MOUSE_TP 5
 
 &mt {
     flavor = "tap-preferred";
