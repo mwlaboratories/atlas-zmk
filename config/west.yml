@@ -1,7 +1,7 @@
 manifest:
   remotes:
-    - name: badjeff
-      url-base: https://github.com/badjeff
+    - name: madswolf
+      url-base: https://github.com/madswolf
     - name: petejohanson
       url-base: https://github.com/petejohanson
 
@@ -11,8 +11,9 @@ manifest:
       revision: core/move-to-zephyr-4-1
       import: app/west.yml
 
+    # Module for PS/2 mouse & TP driver
     - name: kb_zmk_ps2_mouse_trackpoint_driver
-      remote: badjeff
+      remote: madswolf
       revision: main
 
   self:

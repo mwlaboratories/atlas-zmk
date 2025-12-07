@@ -501,7 +501,7 @@
     };
 
     mouse_ps2_input_listener: mouse_ps2_input_listener {
-        compatible = "zmk,input-listener-ps2";
+        compatible = "zmk,input-listener";
         status = "disabled";
 
         device = <&mouse_ps2>;
@@ -511,3 +511,29 @@
 		// zmk-config/config/includes/mouse_tp.dtsi
     };
 };
+
+// Enable PS/2 Mouse Devices
+// The devices are defined above with status = "disabled", and are enabled here
+&mouse_ps2_input_listener {
+};
+
+&mouse_ps2 {
+};
+
+&mouse_ps2 {
+    status = "okay";
+};
+
+&mouse_ps2_input_listener {
+  status = "okay";
+};
+
+#ifdef MOUSE_PS2_DRIVER_UART
+&uart0 {
+  status = "okay";
+};
+
+&uart_ps2 {
+  status="okay";
+};
+#endif
